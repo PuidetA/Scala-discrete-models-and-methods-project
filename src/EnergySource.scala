@@ -2,21 +2,25 @@ import java.time.LocalDateTime
 import scala.util.Random
 import scala.io.StdIn._
 
+// EnergyData case class
+case class EnergyData(timestamp: LocalDateTime, energySource: String, output: Double, status: Boolean)
+
+// Base trait for all energy sources
 trait EnergySource {
   def generateData(): EnergyData
   def adjustOutput(factor: Double): Unit
   def toggleOnOff(status: Boolean): Unit
+  def getName: String
 }
 
-case class EnergyData(timestamp: LocalDateTime, energySource: String, output: Double, status: Boolean)
-
+// Solar Panel implementation
 class SolarPanel(var baseOutput: Double, var isOn: Boolean = true) extends EnergySource {
-  var currentOutput: Double = baseOutput  // Current output starts at base output
+  var currentOutput: Double = baseOutput
 
   override def generateData(): EnergyData = {
     if (isOn) {
       val fluctuation = Random.nextDouble() * 0.1
-      currentOutput = baseOutput * (1 + fluctuation)  // Fluctuate based on base output
+      currentOutput = baseOutput * (1 + fluctuation)
     } else {
       currentOutput = 0
     }
@@ -26,21 +30,24 @@ class SolarPanel(var baseOutput: Double, var isOn: Boolean = true) extends Energ
   override def adjustOutput(factor: Double): Unit = {
     if (isOn) {
       baseOutput *= factor
-      currentOutput = baseOutput  // Adjust current output immediately to reflect change
+      currentOutput = baseOutput
     }
   }
 
   override def toggleOnOff(status: Boolean): Unit = {
     isOn = status
     if (isOn) {
-      baseOutput *= (0.8 + Random.nextDouble() * 0.4)  // Reset base output to a reasonable value
+      baseOutput *= (0.8 + Random.nextDouble() * 0.4)
       currentOutput = baseOutput
     } else {
       currentOutput = 0
     }
   }
+
+  override def getName: String = "Solar"
 }
 
+// Wind Turbine implementation
 class WindTurbine(var baseOutput: Double, var isOn: Boolean = true) extends EnergySource {
   var currentOutput: Double = baseOutput
 
@@ -70,8 +77,11 @@ class WindTurbine(var baseOutput: Double, var isOn: Boolean = true) extends Ener
       currentOutput = 0
     }
   }
+
+  override def getName: String = "Wind"
 }
 
+// Hydropower implementation
 class Hydropower(var baseOutput: Double, var isOn: Boolean = true) extends EnergySource {
   var currentOutput: Double = baseOutput
 
@@ -101,6 +111,6 @@ class Hydropower(var baseOutput: Double, var isOn: Boolean = true) extends Energ
       currentOutput = 0
     }
   }
+
+  override def getName: String = "Hydropower"
 }
-
-

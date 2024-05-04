@@ -8,9 +8,11 @@ object EnergyControlSystem extends App {
 
   val sources = Map("solar" -> solarPanel, "wind" -> windTurbine, "hydro" -> hydropower)
 
-  // Default logging interval in seconds
+  // Default logging interval and storage capacity
   var loggingInterval = 10
-  var energyLogger = new EnergyLogger(sources, loggingInterval)
+  val maxStorageCapacity = 100000.0
+
+  var energyLogger = new EnergyLogger(sources, loggingInterval, maxStorageCapacity)
 
   // Start logging data
   energyLogger.logEnergyData()
@@ -26,6 +28,7 @@ object EnergyControlSystem extends App {
         println("  adjust [source] [factor] - Adjust output by factor (e.g., 1.1 or 0.9)")
         println("  toggle [source] [on/off] - Toggle power source on or off")
         println("  interval [seconds] - Adjust data logging interval")
+        println("  statistics - Show total and average output for each plant, and remaining storage")
         println("  status - Display current status of all sources and the current logging interval")
         println("  quit - Exit the program")
 
@@ -54,6 +57,9 @@ object EnergyControlSystem extends App {
         } else {
           println("Invalid command or parameters.")
         }
+
+      case "statistics" =>
+        energyLogger.displayStatistics()
 
       case "status" =>
         println(s"Current logging interval: $loggingInterval seconds")
