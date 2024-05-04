@@ -1,4 +1,4 @@
-import scala.io.StdIn.readLine
+import scala.io.StdIn.readLine  // Ensure this is at the top of your file
 
 object EnergyControlSystem extends App {
   // Instantiate power sources
@@ -8,9 +8,11 @@ object EnergyControlSystem extends App {
 
   val sources = Map("solar" -> solarPanel, "wind" -> windTurbine, "hydro" -> hydropower)
 
-  // Default logging interval in seconds
+  // Default logging interval and storage capacity
   var loggingInterval = 10
-  var energyLogger = new EnergyLogger(sources, loggingInterval)
+  val maxStorageCapacity = 100000.0
+
+  var energyLogger = new EnergyLogger(sources, loggingInterval, maxStorageCapacity)
 
   // Start logging data
   energyLogger.logEnergyData()
@@ -26,8 +28,10 @@ object EnergyControlSystem extends App {
         println("  adjust [source] [factor] - Adjust output by factor (e.g., 1.1 or 0.9)")
         println("  toggle [source] [on/off] - Toggle power source on or off")
         println("  interval [seconds] - Adjust data logging interval")
+        println("  statistics - Show total and average output for each plant, and remaining storage")
         println("  status - Display current status of all sources and the current logging interval")
         println("  quit - Exit the program")
+        println("  analyze - Analyze data for specific statistics")
 
       case "adjust" =>
         if (input.length == 3) {
@@ -55,6 +59,10 @@ object EnergyControlSystem extends App {
           println("Invalid command or parameters.")
         }
 
+      case "statistics" =>
+        energyLogger.displayStatistics()
+        energyLogger.checkAndAlertForLowOutput()
+
       case "status" =>
         println(s"Current logging interval: $loggingInterval seconds")
         println("Instantaneous output of all generators:")
@@ -62,11 +70,15 @@ object EnergyControlSystem extends App {
           val data = source.generateData()
           println(s"${data.energySource.capitalize}: Output = ${data.output}, Status = ${if (data.status) "On" else "Off"}")
         }
+        energyLogger.checkAndAlertForLowOutput()
 
       case "quit" =>
         println("Exiting program.")
         energyLogger.stopLogging()
         System.exit(0)
+
+      case "analyze" =>
+        energyLogger.analyzeData()
 
       case _ =>
         println("Unknown command.")
