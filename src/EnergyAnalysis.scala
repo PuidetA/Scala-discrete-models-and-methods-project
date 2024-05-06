@@ -1,6 +1,6 @@
 import java.time.LocalDateTime
 
-object EnergyAnalysis.scala extends App {
+object EnergyAnalysis extends App {
 
   case class RenewableEnergyData(timestamp: LocalDateTime, energyOutput: Double)
 
@@ -44,7 +44,7 @@ object EnergyAnalysis.scala extends App {
 
     def filterWeekly(data: Seq[RenewableEnergyData]): Seq[RenewableEnergyData] = {
       val now = LocalDateTime.now()
-      val startOfWeek = now.minusDays(now.getDayOfWeek.getValue - 1) // Adjust for your locale's week start
+      val startOfWeek = now.minusDays(now.getDayOfWeek.getValue - 1)
       data.filter(d => d.timestamp.isAfter(startOfWeek) && d.timestamp.isBefore(startOfWeek.plusWeeks(1)))
     }
 
@@ -55,21 +55,21 @@ object EnergyAnalysis.scala extends App {
     def search(data: Seq[RenewableEnergyData], energyOutputTarget: Double): Seq[RenewableEnergyData] = {
       data.filter(_.energyOutput == energyOutputTarget)
     }
-    val readingsMatchingOutput = search(energyReadings, 12.0)
   }
-  /* Example of energyReadings, uncomment to run the tests. Keep it commented for future reference till the end of the project or when deemed unnecessary. This is how it should roughly be.
-  val energyReadings = Seq(
-    RenewableEnergyData(LocalDateTime.now(), 12.5),
+    /* This is the main method that will be used to test the functions in the DataAnalysis object. You search by search() function.
+
+    val readingsMatchingOutput = search(energyReadings, 12.0) 
+  }
+
+  val energyReadings = Seq(RenewableEnergyData(LocalDateTime.now(), 12.5),
     RenewableEnergyData(LocalDateTime.now().minusHours(1), 10.0),
-    RenewableEnergyData(LocalDateTime.now().minusHours(3), 12.5),
+    RenewableEnergyData(LocalDateTime.now().minusHours(3), 12.5), // Duplicate for mode testing
     RenewableEnergyData(LocalDateTime.now().minusDays(1), 15.2),
     RenewableEnergyData(LocalDateTime.now().minusDays(5), 8.7),
     RenewableEnergyData(LocalDateTime.now().minusDays(8), 10.5)
-  )
-  */
+  )*/
 
-/*  The above energyReadings is used to test the functions in the DataAnalysis object. Uncomment the comment above to run the tests below.
-    Example tests that show how to use the provided functions. Uncomment to run. Keep it commented for future reference till the end of the project or when deemed unnecessary.
+/*
   // Test Mean
   val averageOutput = DataAnalysis.mean(energyReadings)
   println(s"Average energy output: $averageOutput") // Expect something around 11.56666
@@ -97,6 +97,5 @@ object EnergyAnalysis.scala extends App {
 
   // Test Search - Example searching for output of 10.0
   val matchingReadings = DataAnalysis.search(energyReadings, 10.0)
-  println(s"Readings matching energy output 10.0: $matchingReadings")
-*/
+  println(s"Readings matching energy output 10.0: $matchingReadings")*/
 }
