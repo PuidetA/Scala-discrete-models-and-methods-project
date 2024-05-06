@@ -56,6 +56,25 @@ object EnergyAnalysis extends App {
       data.filter(_.energyOutput == energyOutputTarget)
     }
   }
+
+  def performAnalysis(timeframe: String, calculation: String): Unit = {
+    val filteredData = timeframe match {
+      case "hourly" => DataAnalysis.filterHourly(energyData, LocalDateTime.now().getHour)
+      case "daily" => DataAnalysis.filterDaily(energyData, LocalDateTime.now().getDayOfMonth)
+      case "weekly" => DataAnalysis.filterWeekly(energyData)
+      case "monthly" => DataAnalysis.filterMonthly(energyData, LocalDateTime.now().getMonthValue)
+      case _ => println("Invalid timeframe."); return  
+    }
+
+    val finalCalculation = calculation match {
+      case "mean" => println(s"Mean output: ${DataAnalysis.mean(filteredData)}")
+      case "median" => println(s"Median output: ${DataAnalysis.median(filteredData)}")
+      case "mode" => println(s"Mode output: ${DataAnalysis.mode(filteredData)}")
+      case "range" => println(s"Range output: ${DataAnalysis.range(filteredData)}")
+      case "midrange" => println(s"Midrange output: ${DataAnalysis.midrange(filteredData)}")
+      case _ => println("Invalid calculation.")
+    }
+  }
     /* This is the main method that will be used to test the functions in the DataAnalysis object. You search by search() function.
 
     val readingsMatchingOutput = search(energyReadings, 12.0) 

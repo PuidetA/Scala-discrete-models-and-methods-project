@@ -26,6 +26,7 @@ object EnergyControlSystem extends App {
       case "help" =>
         println("Commands:")
         println("  adjust [source] [factor] - Adjust output by factor (e.g., 1.1 or 0.9)")
+        println("  analysis - [hourly/daily/weekly/monthly] [mean/median/mode/range/midrange] - Perform analysis on energy data")
         println("  toggle [source] [on/off] - Toggle power source on or off")
         println("  interval [seconds] - Adjust data logging interval")
         println("  statistics - Show total and average output for each plant, and remaining storage")
@@ -36,6 +37,15 @@ object EnergyControlSystem extends App {
         if (input.length == 3) {
           sources.get(input(1)).foreach(_.adjustOutput(input(2).toDouble))
           println(s"${input(1).capitalize} output adjusted.")
+        } else {
+          println("Invalid command or parameters.")
+        }
+
+      case "analysis" =>
+        println("Enter the time period for analysis (hourly/ daily/ weekly/ monthly):")
+        if (input.length == 3) {
+          DataAnalysis.performAnalysis(input(1), input(2))
+          }
         } else {
           println("Invalid command or parameters.")
         }
