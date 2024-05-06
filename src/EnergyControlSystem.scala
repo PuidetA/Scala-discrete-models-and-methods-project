@@ -1,4 +1,10 @@
+import java.time.LocalDateTime
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import scala.io.StdIn.readLine
+import scala.io.{Source, StdIn}
+import scala.util.Try
+
 
 object EnergyControlSystem extends App {
   // Instantiate power sources
@@ -17,6 +23,149 @@ object EnergyControlSystem extends App {
   // Start logging data
   energyLogger.logEnergyData()
 
+  // Case class representing renewable energy data
+  case class RenewableEnergyData(timestamp: LocalDateTime, energyOutput: Double)
+
+  // Function to read and parse CSV data into RenewableEnergyData instances
+  def loadCsvData(): Seq[RenewableEnergyData] = {
+    val csvFilePath = "energy_data.csv"
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
+    val source = Source.fromFile(csvFilePath)
+
+    val data = source.getLines().drop(1).flatMap { line =>
+      val cols = line.split(",").map(_.trim)
+
+      if (cols.length >= 4) {
+        val timestampOpt = Try(LocalDateTime.parse(cols(0), formatter)).toOption
+        val energyOutputOpt = Try(cols(2).toDouble).toOption
+        val statusOpt = Try(cols(3).toBoolean).toOption
+
+        (timestampOpt, energyOutputOpt, statusOpt) match {
+          case (Some(timestamp), Some(energyOutput), Some(status)) =>
+            Some(RenewableEnergyData(timestamp, energyOutput))
+          case _ => None
+        }
+      } else None
+    }.toSeq
+
+    source.close()
+    data
+  }
+
+
+
+
+
+
+
+  // Object containing analysis functions
+  object DataAnalysis {
+    def mean(data: Seq[RenewableEnergyData]): Double = data.map(_.energyOutput).sum / data.length
+
+    def median(data: Seq[RenewableEnergyData]): Double = {
+      val sortedData = data.sortBy(_.energyOutput)
+      val mid = sortedData.length / 2
+      if (sortedData.length % 2 == 0) {
+        (sortedData(mid - 1).energyOutput + sortedData(mid).energyOutput) / 2
+      } else {
+        sortedData(mid).energyOutput
+      }
+    }
+
+    def mode(data: Seq[RenewableEnergyData]): Double = {
+      data.groupBy(_.energyOutput).maxBy(_._2.length)._1
+    }
+
+    def range(data: Seq[RenewableEnergyData]): Double = {
+      val sortedData = data.sortBy(_.energyOutput)
+      sortedData.last.energyOutput - sortedData.head.energyOutput
+    }
+
+    def midrange(data: Seq[RenewableEnergyData]): Double = {
+      val sortedData = data.sortBy(_.energyOutput)
+      (sortedData.head.energyOutput + sortedData.last.energyOutput) / 2
+    }
+
+    def filterMinutely(data: Seq[RenewableEnergyData], hour: Int, minute: Int): Seq[RenewableEnergyData] = {
+      // Filter data based only on the hour and minute parts of the timestamp
+      val filtered = data.filter { d =>
+        d.timestamp.getHour == hour && d.timestamp.getMinute == minute
+      }
+
+      // Debug print to inspect the data matching the specific hour and minute
+      println(s"Data available for hour $hour and minute $minute: ${filtered.map(_.timestamp)}")
+      filtered
+    }
+
+
+
+    def filterHourly(data: Seq[RenewableEnergyData], hour: Int): Seq[RenewableEnergyData] =
+      data.filter(_.timestamp.getHour == hour)
+
+    def filterDaily(data: Seq[RenewableEnergyData], day: Int): Seq[RenewableEnergyData] =
+      data.filter(_.timestamp.getDayOfMonth == day)
+
+    def filterWeekly(data: Seq[RenewableEnergyData]): Seq[RenewableEnergyData] = {
+      val now = LocalDateTime.now()
+      val startOfWeek = now.minusDays(now.getDayOfWeek.getValue - 1)
+      data.filter(d => d.timestamp.isAfter(startOfWeek) && d.timestamp.isBefore(startOfWeek.plusWeeks(1)))
+    }
+
+    def filterMonthly(data: Seq[RenewableEnergyData], month: Int): Seq[RenewableEnergyData] =
+      data.filter(_.timestamp.getMonthValue == month)
+
+    def search(data: Seq[RenewableEnergyData], energyOutputTarget: Double): Seq[RenewableEnergyData] =
+      data.filter(_.energyOutput == energyOutputTarget)
+  }
+
+  // Analysis function prompts user and executes analysis based on their input
+  def performAnalysis(timeframe: String, calculation: String): Unit = {
+    val data = loadCsvData()
+
+    val filteredData = timeframe match {
+      case "minutely" =>
+        println("Enter the hour (0-23):")
+        val hour = StdIn.readInt()
+        println("Enter the minute (0-59):")
+        val minute = StdIn.readInt()
+        DataAnalysis.filterMinutely(data, hour, minute)
+
+      case "hourly" =>
+        println("Enter the hour (0-23):")
+        val hour = StdIn.readInt()
+        DataAnalysis.filterHourly(data, hour)
+
+      case "daily" =>
+        println("Enter the day of the month:")
+        val day = StdIn.readInt()
+        DataAnalysis.filterDaily(data, day)
+
+      case "weekly" => DataAnalysis.filterWeekly(data)
+      case "monthly" =>
+        println("Enter the month (1-12):")
+        val month = StdIn.readInt()
+        DataAnalysis.filterMonthly(data, month)
+
+      case _ =>
+        println("Invalid timeframe.")
+        return
+    }
+
+    if (filteredData.isEmpty) {
+      println(s"No data available for the specified $timeframe period.")
+      return
+    }
+
+    calculation match {
+      case "mean" => println(s"Mean output: ${DataAnalysis.mean(filteredData)}")
+      case "median" => println(s"Median output: ${DataAnalysis.median(filteredData)}")
+      case "mode" => println(s"Mode output: ${DataAnalysis.mode(filteredData)}")
+      case "range" => println(s"Range output: ${DataAnalysis.range(filteredData)}")
+      case "midrange" => println(s"Midrange output: ${DataAnalysis.midrange(filteredData)}")
+      case _ => println("Invalid calculation.")
+    }
+  }
+
   // Command loop for user input
   while (true) {
     println("Enter command (type 'help' for options): ")
@@ -26,7 +175,7 @@ object EnergyControlSystem extends App {
       case "help" =>
         println("Commands:")
         println("  adjust [source] [factor] - Adjust output by factor (e.g., 1.1 or 0.9)")
-        println("  analysis - [hourly/daily/weekly/monthly] [mean/median/mode/range/midrange] - Perform analysis on energy data")
+        println("  analysis [minutely/hourly/daily/weekly/monthly] [mean/median/mode/range/midrange] - Perform analysis on energy data")
         println("  toggle [source] [on/off] - Toggle power source on or off")
         println("  interval [seconds] - Adjust data logging interval")
         println("  statistics - Show total and average output for each plant, and remaining storage")
@@ -42,9 +191,8 @@ object EnergyControlSystem extends App {
         }
 
       case "analysis" =>
-        println("Enter the time period for analysis (hourly/ daily/ weekly/ monthly):")
         if (input.length == 3) {
-          DataAnalysis.performAnalysis(input(1), input(2))
+          performAnalysis(input(1), input(2))
         } else {
           println("Invalid command or parameters.")
         }
