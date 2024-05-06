@@ -45,7 +45,6 @@ object EnergyControlSystem extends App {
         println("Enter the time period for analysis (hourly/ daily/ weekly/ monthly):")
         if (input.length == 3) {
           DataAnalysis.performAnalysis(input(1), input(2))
-          }
         } else {
           println("Invalid command or parameters.")
         }
